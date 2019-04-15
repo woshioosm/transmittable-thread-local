@@ -4,6 +4,7 @@ import com.alibaba.ttl.threadpool.agent.internal.logging.Logger;
 import com.alibaba.ttl.threadpool.agent.internal.transformlet.JavassistTransformlet;
 import com.alibaba.ttl.threadpool.agent.internal.transformlet.impl.TtlExecutorTransformlet;
 import com.alibaba.ttl.threadpool.agent.internal.transformlet.impl.TtlForkJoinTransformlet;
+import com.alibaba.ttl.threadpool.agent.internal.transformlet.impl.TtlFutureTaskTransformlet;
 import com.alibaba.ttl.threadpool.agent.internal.transformlet.impl.TtlTimerTaskTransformlet;
 
 import javax.annotation.Nonnull;
@@ -127,8 +128,9 @@ public final class TtlAgent {
             final boolean disableInheritable = isDisableInheritableForThreadPool();
 
             final List<JavassistTransformlet> transformletList = new ArrayList<JavassistTransformlet>();
-            transformletList.add(new TtlExecutorTransformlet(disableInheritable));
-            transformletList.add(new TtlForkJoinTransformlet(disableInheritable));
+//            transformletList.add(new TtlExecutorTransformlet(disableInheritable));
+//            transformletList.add(new TtlForkJoinTransformlet(disableInheritable));
+            transformletList.add(new TtlFutureTaskTransformlet());
             if (isEnableTimerTask()) transformletList.add(new TtlTimerTaskTransformlet());
 
             final ClassFileTransformer transformer = new TtlTransformer(transformletList);
