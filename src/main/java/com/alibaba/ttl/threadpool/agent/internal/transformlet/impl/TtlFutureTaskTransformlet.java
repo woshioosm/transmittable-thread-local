@@ -3,6 +3,8 @@ package com.alibaba.ttl.threadpool.agent.internal.transformlet.impl;
 import com.alibaba.ttl.threadpool.agent.internal.logging.Logger;
 import com.alibaba.ttl.threadpool.agent.internal.transformlet.JavassistTransformlet;
 import javassist.*;
+import javassist.expr.ExprEditor;
+import javassist.expr.MethodCall;
 
 import java.io.IOException;
 import java.lang.reflect.Modifier;
@@ -37,7 +39,7 @@ public class TtlFutureTaskTransformlet implements JavassistTransformlet {
 
                 // 更新 构造方法
                 CtConstructor[] constructMethods = clazz.getConstructors();
-                for(CtConstructor ctMethod: constructMethods) {
+                for (CtConstructor ctMethod : constructMethods) {
                     String code = "capturedRef = new java.util.concurrent.atomic.AtomicReference(com.alibaba.ttl.TransmittableThreadLocal.Transmitter.capture());";
                     ctMethod.insertBefore(code);
                 }
@@ -49,10 +51,25 @@ public class TtlFutureTaskTransformlet implements JavassistTransformlet {
 
                 String code2 = "Object captured = capturedRef.get();";
                 String code3 = "backup = com.alibaba.ttl.TransmittableThreadLocal.Transmitter.replay(captured);";
-                method.insertBefore(code2 + code3);
+                final String beforeCode = code2 + code3;
+//                method.insertBefore(code2 + code3);
+//
+                final String afterCode = "com.alibaba.ttl.TransmittableThreadLocal.Transmitter.restore(backup);";
+//                method.insertAfter(code4);
 
-                String code4 = "com.alibaba.ttl.TransmittableThreadLocal.Transmitter.restore(backup);";
-                method.insertAfter(code4);
+
+                method.instrument(new ExprEditor() {
+                    public void edit(MethodCall m)
+                            throws CannotCompileException {
+                        System.out.println(m.getClassName());
+                        System.out.println("method:" + m.getMethodName());
+                        // 替换run方法中的 c.call()
+                        if (m.getClassName().equals("java.util.concurrent.Callable")
+                                && m.getMethodName().equals("call"))
+                            m.replace("{ try {" + beforeCode + "$_ = $proceed($$);}finally{" + afterCode + "} }");
+                    }
+                });
+
                 return clazz.toBytecode();
             }
 
@@ -63,20 +80,4 @@ public class TtlFutureTaskTransformlet implements JavassistTransformlet {
         return null;
     }
 
-    private void updateMethodOfExecutorClass(final CtMethod method) throws NotFoundException, CannotCompileException {
-        final int modifiers = method.getModifiers();
-        if (!Modifier.isPublic(modifiers) || Modifier.isStatic(modifiers)) return;
-
-        CtClass[] parameterTypes = method.getParameterTypes();
-        StringBuilder insertCode = new StringBuilder();
-        for (int i = 0; i < parameterTypes.length; i++) {
-            final String paramTypeName = parameterTypes[i].getName();
-//            if (PARAM_TYPE_NAME_TO_DECORATE_METHOD_CLASS.containsKey(paramTypeName)) {
-//                String code = String.format("$%d = %s.get($%d, false, true);", i + 1, PARAM_TYPE_NAME_TO_DECORATE_METHOD_CLASS.get(paramTypeName), i + 1);
-//                logger.info("insert code before method " + signatureOfMethod(method) + " of class " + method.getDeclaringClass().getName() + ": " + code);
-//                insertCode.append(code);
-//            }
-        }
-        if (insertCode.length() > 0) method.insertBefore(insertCode.toString());
-    }
 }
