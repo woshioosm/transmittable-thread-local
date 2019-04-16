@@ -12,13 +12,7 @@ import java.lang.reflect.Modifier;
 import static com.alibaba.ttl.threadpool.agent.internal.transformlet.impl.Utils.*;
 
 /**
- * TTL {@link JavassistTransformlet} for {@link java.util.TimerTask}.
- *
- * @author Jerry Lee (oldratlee at gmail dot com)
- * @author wuwen5 (wuwen.55 at aliyun dot com)
- * @see java.util.TimerTask
- * @see java.util.Timer
- * @since 2.7.0
+ * @author miaoshui
  */
 public class TtlFutureTaskTransformlet implements JavassistTransformlet {
     private static final Logger logger = Logger.getLogger(TtlFutureTaskTransformlet.class);
