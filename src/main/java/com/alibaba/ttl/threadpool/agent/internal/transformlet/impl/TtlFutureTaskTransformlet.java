@@ -55,8 +55,8 @@ public class TtlFutureTaskTransformlet implements JavassistTransformlet {
                 method.instrument(new ExprEditor() {
                     public void edit(MethodCall m)
                             throws CannotCompileException {
-                        System.out.println(m.getClassName());
-                        System.out.println("method:" + m.getMethodName());
+                        //System.out.println(m.getClassName());
+                        //System.out.println("method:" + m.getMethodName());
                         // 替换run方法中的 c.call()
                         if (m.getClassName().equals("java.util.concurrent.Callable")
                                 && m.getMethodName().equals("call"))
